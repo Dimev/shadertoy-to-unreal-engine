@@ -70,9 +70,9 @@ This has a few parameters when you select it and look at the details pane
  - Code: the code for this node
  - Output type: which is what the node outputs 
  - Description: what the node will be named in the node graph
- - Inputs: this is a list of inputs the node takes in, and you can access from the code inside the node
+ - Inputs: this is a list of inputs the node takes in. you can access these by their names inside the code in the custom node
 
-Under the hood, custom nodes get converted into a function, meaning you sadly can't define your own functions inside the custom node without some workarounds (in chapter Functions, which also goes about )
+Under the hood, custom nodes get converted into a function, meaning you sadly can't define your own functions inside the custom node without some workarounds (which can be found in the chapter Functions)
 
 If you want to know what the final shader is unreal generates for your material, you can see it under window -> view shader source *CHECK IF THIS IS CORRECT*
 
@@ -83,6 +83,9 @@ We can, but it's the worst text editor available.
 I suggest instead making a seperate file somewhere else, with the .hlsl extention, and edit it with your favorite text editor (I use vscode, and it seems to do automatic syntax highlighting for this file type, which helps you see what's going on)
 
 Then, once you're done, you can copy-paste the code from there into the Code field of the custom node.
+
+Under the hood, unreal will then generate a function with the code found in the node inside.
+Because of this, there's no need to add the `float4 my_func(...) {` at the top yourself, because unreal does that automatically.
 
 # Porting
 Now we can start porting the shader
@@ -124,6 +127,32 @@ Depending on what it does, you can either hardcode it or pass it as a parameter
 However, this is the light direction of the atmosphere. It would be nice if we could easily change that, so how about using the object orientation? ![image](https://user-images.githubusercontent.com/49782454/125177821-3e0e1900-e1df-11eb-9db2-3db33c30a73d.png)
 
 That way we can easily change the light direction by rotating our mesh!
+
+Now, if we go down further, there's a render_scene function, which renders the planet and sun in the background
+We're not interested in porting these, as we can make much better planets with unreal.
+
+After that, there's a function call to calculate_scattering, which takes in `start` (the ray start, AKA camera position), `dir`, which is the camera direction, `max_dist`, which is the maximum distance into the scene the ray can travel. This is covered in the Maximum depth chapter, as this requires a bit of funky code to work.
+
+There's also `scene_color` which takes in the current scene color. We can simply read the scene texture *CHECK NAMING* to get this, but there's a caveat
+This function returns the new color of the pixel, based on the scene color.
+While we can set opacity to 1 in the material, this looks a bit weird in some cases.
+So, we're gonna need to modify the shader to not use `scene_color` and instead work with AlphaComposite
+
+After that, there's `light dir`, which we can use the object orientation for, and light intensity, which can be passed as a scalar param
+
+After that, there's a lot of other parameters
+For vec2, vec3 and vec4 parameters you can use a vector parameter to pass the information to the material, and for float you can use a scalar parameter to do this
+
+Make sure you add all of these *with the correct names* to the input field of the custom node you're going to use!
+
+Now that we've got inputs set up, it's time to actually convert the shader to HLSL, and fix the `scene color` issue.
+
+### GLSL vs HLSL
+*TODO DIFFERENCES*
+
+### Scene color and alpha composite
+*TODO*
+
 
 # Maximum depth
 In ue4, use this bit of code to get the correct distance from a pixel to the camera inside a translucent material
