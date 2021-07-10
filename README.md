@@ -150,6 +150,8 @@ Now that we've got inputs set up, it's time to actually convert the shader to HL
 ### GLSL vs HLSL
 *TODO DIFFERENCES*
 
+SHADERed also supports saving shaders as HLSL apparently, so no need to do it manually https://shadered.org/
+
 ### Scene color and alpha composite
 *TODO*
 
