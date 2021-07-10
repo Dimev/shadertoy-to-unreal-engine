@@ -4,10 +4,10 @@
 # shadertoy-to-ue
 Guide for converting shadertoy shaders to Unreal Engine materials
 
-This assumes you want to port a 3D shader to materials, that renders something like clouds, or a special shape
+This assumes you want to port a 3D shader to materials, that renders something like clouds, an atmosphere, or other fog-like effects
 
 Knowledge required:
- - you can work with ue4 materials
+ - you can work with ue materials
  - you have a general idea of how the thing you want to port works
 
 ### Chapters
@@ -17,6 +17,7 @@ Knowledge required:
  * Porting shaders
  * Maximum depth
  * Functions
+ * Distance field shadows
  * When to port
 
 # What are shaders?
@@ -42,6 +43,10 @@ If you want a good intro to raytracing, you can read [Ray tracing in one weekend
 
 If the shader makes use of raytracing or raymarching, there's usually a function called render or similar, that takes in the ray origin (camera position, usually also called ro, ray_start, origin) and the ray direction (camera vector, usually also called rd, dir, or ray_dir).
 
+However the shader works, all code that does the actual rendering is called in the mainImage function in shadertoy, which is then run for every pixel
+
+*TODO SHADERTOY INPUTS*
+
 *note: This function might be hidden inside the mainImage function*
 
 ### Example
@@ -50,7 +55,30 @@ It's also available [here, as a SHADERed project](https://github.com/Dimev/atmos
 
 For ease of use, I've put the version we'll use here in the file [atmosphere.glsl](https://github.com/Dimev/shadertoy-to-unreal-engine/blob/main/atmosphere.glsl)
 
+This example was specifically made to be easy to port to unreal
+ - the main functionality is in one function
+ - the input and output are made to work easily with unreal inputs and outputs
+
 # Porting
+Now we can start porting the shader
+But, what kind of material do we need?
+
+Post process materials are the most versatile, as they run after most of the rendering is done, and have direct control of the color of a pixel
+However, we can also use a translucent materials with the AlphaComposite blend mode.
+But, what does AlphaComposite do?
+It works like this: `pixel_color = material_color.xyz + pixel_color * material_color.w` under the hood, meaning we have control of how much we add to the current color, and how much we keep of the original.
+
+If you are rendering some form of geometry from the shader that can't be represented with a mesh, it's possible to use a shader with alpha scissors and pixel depth offset *CHECK IF THE NAMING HERE IS CORRECT*
+
+But, what mesh do we use to render this?
+An inverted cube works good enough for this. It needs to be inverted (meaning faces point inward) to keep working when the camera moves inside
+
+We can also disable depth testing, which will render our material over every object in the scene.
+This allows us to have the shader determine how interaction with the scene work, which most shadertoy shaders need
+
+The shader we're going to port is an atmosphere effect, which works well by adding
+
+### The shader
 Now, let's look around the example in [atmosphere.glsl](https://github.com/Dimev/shadertoy-to-unreal-engine/blob/main/atmosphere.glsl)
 
 In mainImage, we can find a few variables, `camera_vector`, `camera_position`, and `light direction`
