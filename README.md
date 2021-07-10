@@ -15,10 +15,10 @@ Knowledge required:
  * How (Most) Shadertoy shaders work
  * Shaders in UE
  * Porting shaders
- * Maximum depth
- * Functions
+ * Maximum depth 
+ * Functions *How to use functions in node*
  * Distance field shadows
- * When to port
+ * When to port *(Caveats of porting + translating to nodes)*
 
 # What are shaders?
 To put it simply, shaders are small programs that run on the GPU, and can affect what the final image looks like.
@@ -59,6 +59,31 @@ This example was specifically made to be easy to port to unreal
  - the main functionality is in one function
  - the input and output are made to work easily with unreal inputs and outputs
 
+# Shaders in UE
+There's a few ways to do shaders in ue
+ - add them via USF/USH files
+ - translate them to material nodes
+ - the custom expression in materials
+
+The easiest option of these is the custom expression node
+This has a few parameters when you select it and look at the details pane
+ - Code: the code for this node
+ - Output type: which is what the node outputs 
+ - Description: what the node will be named in the node graph
+ - Inputs: this is a list of inputs the node takes in, and you can access from the code inside the node
+
+Under the hood, custom nodes get converted into a function, meaning you sadly can't define your own functions inside the custom node without some workarounds (in chapter Functions, which also goes about )
+
+If you want to know what the final shader is unreal generates for your material, you can see it under window -> view shader source *CHECK IF THIS IS CORRECT*
+
+Now, we can write arbitrary code into the Code field for the node
+*right?*
+
+We can, but it's the worst text editor available.
+I suggest instead making a seperate file somewhere else, with the .hlsl extention, and edit it with your favorite text editor (I use vscode, and it seems to do automatic syntax highlighting for this file type, which helps you see what's going on)
+
+Then, once you're done, you can copy-paste the code from there into the Code field of the custom node.
+
 # Porting
 Now we can start porting the shader
 But, what kind of material do we need?
@@ -76,7 +101,7 @@ An inverted cube works good enough for this. It needs to be inverted (meaning fa
 We can also disable depth testing, which will render our material over every object in the scene.
 This allows us to have the shader determine how interaction with the scene work, which most shadertoy shaders need
 
-The shader we're going to port is an atmosphere effect, which works well by adding
+The shader we're going to port is an atmosphere effect, which works well as an AlphaComposite effect, as it adds a color on top of the scene, and partly masks things behind it
 
 ### The shader
 Now, let's look around the example in [atmosphere.glsl](https://github.com/Dimev/shadertoy-to-unreal-engine/blob/main/atmosphere.glsl)
@@ -99,7 +124,6 @@ Depending on what it does, you can either hardcode it or pass it as a parameter
 However, this is the light direction of the atmosphere. It would be nice if we could easily change that, so how about using the object orientation? ![image](https://user-images.githubusercontent.com/49782454/125177821-3e0e1900-e1df-11eb-9db2-3db33c30a73d.png)
 
 That way we can easily change the light direction by rotating our mesh!
-
 
 # Maximum depth
 In ue4, use this bit of code to get the correct distance from a pixel to the camera inside a translucent material
