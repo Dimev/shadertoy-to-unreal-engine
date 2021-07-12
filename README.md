@@ -96,7 +96,7 @@ However, we can also use a translucent materials with the AlphaComposite blend m
 But, what does AlphaComposite do?
 It works like this: `pixel_color = material_color.xyz + pixel_color * material_color.w` under the hood, meaning we have control of how much we add to the current color, and how much we keep of the original.
 
-If you are rendering some form of geometry from the shader that can't be represented with a mesh, it's possible to use a shader with alpha scissors and pixel depth offset *CHECK IF THE NAMING HERE IS CORRECT*
+If you are rendering some form of geometry from the shader that can't be represented with a mesh, it's possible to use a material with the masked opaque mode and pixel depth offset.
 
 But, what mesh do we use to render this?
 An inverted cube works good enough for this. It needs to be inverted (meaning faces point inward) to keep working when the camera moves inside
