@@ -74,7 +74,7 @@ This has a few parameters when you select it and look at the details pane
 
 Under the hood, custom nodes get converted into a function, meaning you sadly can't define your own functions inside the custom node without some workarounds (which can be found in the chapter Functions)
 
-If you want to know what the final shader is unreal generates for your material, you can see it under window -> view shader source *CHECK IF THIS IS CORRECT*
+If you want to know what the final shader is unreal generates for your material, you can see it under window -> shader code -> HLSL code. This will generate and show a huge HLSL file, that contains everything needed to render your material. 
 
 Now, we can write arbitrary code into the Code field for the node
 *right?*
