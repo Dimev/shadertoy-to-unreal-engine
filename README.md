@@ -187,7 +187,7 @@ the opacity might need a oneminus before using it.
 
 The full ported shader can be found at *TODO*
 
-# functions
+# Functions
 Now for something we haven't found in the shader, but something that does exist in other shaders: functions.
 
 HLSL also supports functions, like GLSL, but ue's custom node doesn't. There are a few ways around this.
