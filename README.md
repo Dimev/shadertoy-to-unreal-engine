@@ -148,13 +148,17 @@ Make sure you add all of these *with the correct names* to the input field of th
 Now that we've got inputs set up, it's time to actually convert the shader to HLSL, and fix the `scene color` issue.
 
 ### GLSL vs HLSL
-*TODO DIFFERENCES*
+Shadertoy shaders are written in GLSL, while unreal uses HLSL, meaning you want to translate them before you can use them.
 
-SHADERed also supports saving shaders as HLSL apparently, so no need to do it manually https://shadered.org/
+This can be done automatically with [SHADERed](https://shadered.org/), which has the option to export to HLSL, which will in turn convert the shader to HLSL
+SHADERed itself is also very handy for writing and debugging shaders.
 
-### Scene color and alpha composite
-*TODO*
+Although this step can be done automatically, it's handy to know how to do it manually as well
+The main differences between GLSL and HLSL are naming. In GLSL vectors are called `vec2`, `vec3` and `vec4`, but in HLSL it's `float2`, `float3` and `float4`. 
+Same goes for matrices, `mat2`, `mat3` and `mat4` become `float2x2`, `float3x3` and `float4x4`.
 
+There's also a few renamed functions, `fract` becomes `frac`, and matrix multiplication requires an explict `mul(matrix_a, matrix_b)`.
+There's more, but I won't list it here. If you get an error with the shader compiling, read the error message to figure out what was wrong, and look up how to use it.
 
 # Maximum depth
 In ue4, use this bit of code to get the correct distance from a pixel to the camera inside a translucent material
@@ -166,4 +170,11 @@ float Depth = DeviceZ * View.InvDeviceZToWorldZTransform[0] + View.InvDeviceZToW
 
 return Depth / abs(dot(Forward, Parameters.CameraVector));
 ```
+
+### Scene color and alpha composite
+*TODO*
+
+### Textures
+
+
 
