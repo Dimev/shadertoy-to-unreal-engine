@@ -43,11 +43,11 @@ If you want a good intro to raytracing, you can read [Ray tracing in one weekend
 
 If the shader makes use of raytracing or raymarching, there's usually a function called render or similar, that takes in the ray origin (camera position, usually also called ro, ray_start, origin) and the ray direction (camera vector, usually also called rd, dir, or ray_dir).
 
-However the shader works, all code that does the actual rendering is called in the mainImage function in shadertoy, which is then run for every pixel
-
-*TODO SHADERTOY INPUTS*
-
 *note: This function might be hidden inside the mainImage function*
+
+However the shader works, all code that does the actual rendering is called in the mainImage function in shadertoy, which is then run for every pixel
+This takes in the fragCoord, which is the screen UV, or pixel coordinate on the screen.
+THere's also iResolution, which is the resolution, iTime, which is the current time, iMouse for the mouse position, and iChannel1 to iChannel4 for texture inputs. The full list can be found [here](https://www.shadertoy.com/howto)
 
 ### Example
 We'll be using [this atmosphere shader](https://www.shadertoy.com/view/wlBXWK) as an example to port (It's my own atmosphere shader)
@@ -133,7 +133,7 @@ We're not interested in porting these, as we can make much better planets with u
 
 After that, there's a function call to calculate_scattering, which takes in `start` (the ray start, AKA camera position), `dir`, which is the camera direction, `max_dist`, which is the maximum distance into the scene the ray can travel. This is covered in the Maximum depth chapter, as this requires a bit of funky code to work.
 
-There's also `scene_color` which takes in the current scene color. We can simply read the scene texture *CHECK NAMING* to get this, but there's a caveat
+There's also `scene_color` which takes in the current scene color. We can simply read the scene texture to get this, but there's a caveat
 This function returns the new color of the pixel, based on the scene color.
 While we can set opacity to 1 in the material, this looks a bit weird in some cases.
 So, we're gonna need to modify the shader to not use `scene_color` and instead work with AlphaComposite
@@ -156,12 +156,77 @@ SHADERed itself is also very handy for writing and debugging shaders.
 Although this step can be done automatically, it's handy to know how to do it manually as well
 The main differences between GLSL and HLSL are naming. In GLSL vectors are called `vec2`, `vec3` and `vec4`, but in HLSL it's `float2`, `float3` and `float4`. 
 Same goes for matrices, `mat2`, `mat3` and `mat4` become `float2x2`, `float3x3` and `float4x4`.
+Vector initialization in HLSL is also a bit different, as `float3 x = 0.0` is allowed, while `float3 x = float3(0.0)` is not;
 
 There's also a few renamed functions, `fract` becomes `frac`, and matrix multiplication requires an explict `mul(matrix_a, matrix_b)`.
 There's more, but I won't list it here. If you get an error with the shader compiling, read the error message to figure out what was wrong, and look up how to use it.
 
-# Maximum depth
-In ue4, use this bit of code to get the correct distance from a pixel to the camera inside a translucent material
+# Porting the shader
+From earlier, we know that calculate_scattering  calculates the actual output color, 
+so we'll take everything in the body of the function, meaning `vec3 calculate_scattering(...) { /* THE CODE HERE */ }`, and copy it to some file somewhere.
+
+Then we'll translate it. In this case, that's easy enough, just replace all occurances of vec with float.
+We'll also have to do something about the output, because right now the shader relies on replacing what's on screen, but that might not be desirable.
+
+Instead, we'd like the material to blend nicely, so let's make the return type a `float4`, with x, y, and z being the color, and w being how much we want to blend (0 is full background, 1 is full color). This comes in handy with alphacomposite later.
+
+We'll replace the early returns with a `return 0.0`, and the final return with this instead:
+```hlsl
+return float4(
+    (
+        phase_ray * beta_ray * total_ray // rayleigh color
+        + phase_mie * beta_mie * total_mie // mie
+        + opt_i.x * beta_ambient // and ambient
+    ) * light_intensity,
+    opacity
+);
+``` 
+this puts the opacity in the W channel of the output, which allows us to use it in the material.
+Simply mask the w component and plug it into opacity if you have the alphacomposite blend mode on, and mask the r, g and b channels and plug that into emissive.
+the opacity might need a oneminus before using it.
+
+The full ported shader can be found at *TODO*
+
+# functions
+Now for something we haven't found in the shader, but something that does exist in other shaders: functions.
+
+HLSL also supports functions, like GLSL, but ue's custom node doesn't. There are a few ways around this.
+If the function is simple, you can simply copy it to the main shader and use the right variables for the input and output, but this is complex for bigger functions.
+Luckily, there's a workaround.
+
+HLSL is like c++ is to c, it is object oriented.
+
+What you can do is make a struct called Functions, and put the needed functions in there
+```hlsl
+struct Functions {
+
+    static float square(float x) {
+    
+        return x * x;
+    
+    }
+}
+```
+Then, make a static instance of it
+```hlsl
+static Functions F;
+```
+And when you want to call a function, you can simply do
+```hlsl
+float squared = F.square(2.0);
+```
+This is rather hacky, and if you're writing custom USF/USH shaders this is not reccomended, but it is possible.
+
+### Maximum depth
+We'll also want to properly handle scene depth.
+This is done in the shader with the max_dist parameter, which takes in the distance until a solid surface is encountered.
+
+You can get this in ue in post process shaders using the distance between the pixel position and the camera position, but tranclucent materials are a bit harder.
+
+There, you have to read from the depth texture, and divide the value from there by `dot(camera vector, camera forward vector`
+This works, but not 100%, due to ue using a tiny offset to avoid a division by 0 somewhere, which is stupid
+
+if you put the code below into a custom node, you get a custom node that effectively gets the maximum distance
 ```hlsl
 float3 Forward = mul(float3(0.00000000,0.00000000,1.00000000), ResolvedView.ViewToTranslatedWorld);
 float DeviceZ = LookupDeviceZ(ScreenAlignedPosition(GetScreenPosition(Parameters))).r;
@@ -175,6 +240,6 @@ return Depth / abs(dot(Forward, Parameters.CameraVector));
 *TODO*
 
 ### Textures
-
+*TODO*
 
 
