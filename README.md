@@ -15,8 +15,9 @@ Knowledge required:
  * How (Most) Shadertoy shaders work
  * Shaders in UE
  * Porting shaders
- * Maximum depth 
- * Functions *How to use functions in node*
+ * Maximum depth
+ * Scene color and AplhaComposite 
+ * Textures
  * Distance field shadows
  * When to port *(Caveats of porting + translating to nodes)*
 
@@ -240,6 +241,12 @@ return Depth / abs(dot(Forward, Parameters.CameraVector));
 *TODO*
 
 ### Textures
+*TODO*
+
+### Distance field shadows
+*TODO*
+
+### When to port
 *TODO*
 
 
