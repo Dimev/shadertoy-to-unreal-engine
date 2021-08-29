@@ -206,7 +206,7 @@ struct Functions {
         return x * x;
     
     }
-}
+}; // <--- Important to close with a ;
 ```
 Then, make a static instance of it
 ```hlsl
